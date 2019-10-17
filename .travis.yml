@@ -1,0 +1,16 @@
+language: node_js
+
+services:
+  - docker
+
+node_js:
+  - node
+
+before_script:
+  - npm run build
+
+script:
+  - docker-compose -f docker-compose.test.yml up --abort-on-container-exit --exit-code-from test
+
+after_success:
+  - npm run codecov

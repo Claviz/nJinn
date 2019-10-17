@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  test:
+    image: node:latest
+    depends_on:
+      - redis
+    command: npm test
+    environment:
+      NODE_ENV: development
+      REDIS_HOST: redis
+    volumes:
+      - ./:/app
+    working_dir: /app
+
+  redis:
+    image: redis
