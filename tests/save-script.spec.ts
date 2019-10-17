@@ -140,12 +140,10 @@ describe('/queueJobs', () => {
                 await rp({
                     method: 'POST',
                     url: 'http://localhost:3033/queueJobs',
-                    body: {
-                        jobs: [{
-                            id: 'abc.js',
-                            webhook: { url: 'http://localhost:3034/webhook' }
-                        }]
-                    },
+                    body: [{
+                        id: 'abc.js',
+                        webhook: { url: 'http://localhost:3034/webhook' }
+                    }],
                     json: true,
                 })
             }
