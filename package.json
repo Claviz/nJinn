@@ -1,6 +1,6 @@
 {
   "name": "njinn",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Build and run serverless javascript applications.",
   "main": "lib/server",
   "types": "lib/server",
@@ -33,6 +33,7 @@
     "@types/node": "^12.0.0",
     "@types/request-promise": "^4.1.44",
     "@types/semver": "^6.0.2",
+    "@types/workerpool": "^5.0.0",
     "codecov": "^3.5.0",
     "jest": "^24.8.0",
     "ts-jest": "^24.0.2",
@@ -46,6 +47,7 @@
     "fs-extra": "^8.1.0",
     "latest-version": "^5.1.0",
     "request": "^2.88.0",
-    "request-promise": "^4.2.4"
+    "request-promise": "^4.2.4",
+    "workerpool": "^5.0.2"
   }
 }

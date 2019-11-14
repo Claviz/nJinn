@@ -1,5 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`/executeScript executes failing script 1`] = `[StatusCodeError: 500 - {"statusCode":500,"error":"Internal Server Error","message":"123"}]`;
+
 exports[`/queueJobs executes failing script in the background and sends status 1`] = `
 Array [
   Object {

@@ -1,4 +1,4 @@
 export interface NpmPackage {
-    package: string;
+    name: string;
     version: string;
 }

@@ -69,7 +69,7 @@ describe('/installPackages', () => {
             method: 'POST',
             url: 'http://localhost:3033/installPackages',
             body: [{
-                package: 'is-number',
+                name: 'is-number',
             }] as NpmPackage[],
             json: true,
         });
@@ -84,7 +84,7 @@ describe('/installPackages', () => {
             method: 'POST',
             url: 'http://localhost:3033/installPackages',
             body: [{
-                package: 'is-number',
+                name: 'is-number',
                 version,
             }] as NpmPackage[],
             json: true,
@@ -172,5 +172,30 @@ describe('/executeScript', () => {
             json: true,
         });
         expect(result).toEqual(123);
+    });
+
+    it('executes failing script', async () => {
+        await rp({
+            method: 'POST',
+            url: 'http://localhost:3033/saveScript',
+            body: {
+                id: 'abc.js',
+                script: `module.exports = () => { throw new Error(123); }`,
+            },
+            json: true,
+        });
+        try {
+            await rp({
+                method: 'POST',
+                url: 'http://localhost:3033/executeScript',
+                body: {
+                    id: 'abc.js',
+                },
+                json: true,
+            });
+        } catch (err) {
+            // console.log(err);
+            expect(err).toMatchSnapshot();
+        }
     });
 });

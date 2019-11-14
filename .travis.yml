@@ -14,3 +14,6 @@ script:
 
 after_success:
   - npm run codecov
+
+notifications:
+  slack: client-line:ZAlBGkbmTEsy2z0piIwIZgIP

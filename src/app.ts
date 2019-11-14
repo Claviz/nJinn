@@ -6,6 +6,7 @@ import latestVersion from 'latest-version';
 import path from 'path';
 import { performance } from 'perf_hooks';
 import rp from 'request-promise';
+import workerpool from 'workerpool';
 
 import { InstalledPackage } from './models/installed-package';
 import { NjinnServer } from './models/njinn-server';
@@ -14,6 +15,7 @@ import { ServerOptions } from './models/server-options';
 import { Webhook } from './models/webhook';
 import { getInstalledPackages } from './utils';
 
+const pool = workerpool.pool('./worker.js');
 const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
 
 async function buildQueue(): Promise<Queue.Queue> {
@@ -21,7 +23,7 @@ async function buildQueue(): Promise<Queue.Queue> {
     queue.process(100, async function (job, done) {
         try {
             const { id, context } = job.data;
-            const result = await require(path.resolve(`./generated/${id}`))(context);
+            const result = await pool.exec('executeScript', [`./generated/${id}`, context]);
             done(null, result);
         } catch (err) {
             done(err);
@@ -82,7 +84,7 @@ export async function startServer(options: ServerOptions): Promise<NjinnServer> 
         }
         const fileName = `./generated/${id}`;
         await fs.outputFile(fileName, script);
-        delete require.cache[path.resolve(fileName)];
+        await pool.exec('invalidateScriptCache', [fileName]);
         reply.send();
     });
 
@@ -96,10 +98,15 @@ export async function startServer(options: ServerOptions): Promise<NjinnServer> 
         reply.send();
     });
 
-    fastify.post('/executeScript', async (request, reply) => {
+    fastify.post('/executeScript', (request, reply) => {
         const { id, context } = request.body;
-        const result = await require(path.resolve(`./generated/${id}`))(context);
-        reply.send(result);
+        const poolPromise =
+            pool.exec('executeScript', [`./generated/${id}`, context])
+                .then((result) => reply.send(result))
+                .catch((err) => reply.send(err));
+        request.req.on('close', async () => {
+            await poolPromise.cancel();
+        });
     });
 
     fastify.post('/installPackages', async (request, reply) => {
@@ -109,9 +116,9 @@ export async function startServer(options: ServerOptions): Promise<NjinnServer> 
 
     async function installPackages(packages: NpmPackage[] = []) {
         await execa('npm', ['init', '-y'], { cwd: './generated' });
-        const installedPackages = await getPackages(packages.map(x => x.package));
+        const installedPackages = await getPackages(packages.map(x => x.name));
         for (let i = 0; i < packages.length; i++) {
-            const packageName = packages[i].package;
+            const packageName = packages[i].name;
             const version = packages[i].version || 'latest';
             const installedPackage = installedPackages.find(x => x.name === packageName);
             const packageWithVersion = `${packageName}@${version}`;
@@ -142,6 +149,7 @@ export async function startServer(options: ServerOptions): Promise<NjinnServer> 
 
     fastify.addHook('onClose', async (instance, done) => {
         await queue.close();
+        await pool.terminate(true);
         done();
     });
 
